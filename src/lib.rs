@@ -1,39 +1,92 @@
+//! EZEmojis is a Work in progress made for [rust-rain](https://rusty-rain.xyz) program
+//! so just a warning that the api may change a lot in the coming updates.
 use std::collections::HashMap;
+use std::hash::Hash;
 
-// Turn this into a trait
-pub struct EZEmojis {
-    list: HashMap<&'static str, Vec<u32>>,
+/// All Default Implemented Emojis Groups.
+///
+/// Some of these may not show up for you depending on your Font I think.
+/// correct me if I am wrong.
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+pub enum EmojiGroups {
+    Smile,
+    Moon,
+    Earth,
+    Plant,
+    Clock,
+    Shape,
+    Arrow,
+    All,
 }
 
-impl EZEmojis {
-    pub fn new() -> Self {
+/// CharGroups are a collection of u32 numbers that group like characters together.
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+pub enum CharGroups<T: Hash + Eq> {
+    /// Default Implemented Groups
+    Standard(EmojiGroups),
+    /// Place your Custom Groups in this one.
+    Custom(T),
+}
+
+impl<T: Hash + Eq> From<EmojiGroups> for CharGroups<T> {
+    fn from(v: EmojiGroups) -> Self {Self::Standard(v)}
+}
+
+impl<T: Hash + Eq> CharGroups<T> {
+    pub fn custom(v: T) -> Self {Self::Custom(v)}
+}
+
+/// User Implemented Groups
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+pub enum Custom {
+    C,
+    D,
+}
+
+
+/// Creates A `HashMap<EmojiGroups, Vec<u32>>` and returns it.
+pub fn create_emoji_data<T: Hash + Eq>() -> HashMap<CharGroups<T>, Vec<u32>> {
         let mut hash = HashMap::new();
         // FIXME:
-        hash.insert("smile", (127512..=128591).collect());
+        hash.insert(EmojiGroups::Smile.into(), create_smile());
 
-        hash.insert("moon", create_moon());
-        hash.insert("earth", create_earth());
-        hash.insert("plant", create_plant());
-        hash.insert("clock", create_clock());
-        hash.insert("shape", create_shape());
-        hash.insert("arrow", create_arrows());
-        hash.insert("all",  create_all());
-        Self { list: hash }
+        hash.insert(EmojiGroups::Moon.into(), create_moon());
+        hash.insert(EmojiGroups::Earth.into(), create_earth());
+        hash.insert(EmojiGroups::Plant.into(), create_plant());
+        hash.insert(EmojiGroups::Clock.into(), create_clock());
+        hash.insert(EmojiGroups::Shape.into(), create_shape());
+        hash.insert(EmojiGroups::Arrow.into(), create_arrows());
+        hash.insert(EmojiGroups::All.into(),  create_all());
+        hash
+}
+
+
+pub struct EZEmojis<T: Hash + Eq> {
+    list: HashMap<CharGroups<T>, Vec<u32>>,
+}
+
+impl<T: Hash + Eq> EZEmojis<T> {
+    pub fn new() -> Self {
+        Self { list: create_emoji_data() }
     }
 
-    pub fn add(&mut self, key: &'static str, value: Vec<u32>) {
+    pub fn add(&mut self, key: CharGroups<T>, value: Vec<u32>) {
         self.list.insert(key, value);
     }
 
-    pub fn get_char(&self, key: &str) -> Option<Vec<char>> {
+    pub fn get_char(&self, key: &CharGroups<T>) -> Option<Vec<char>> {
         self.list.get(key).map(
             |n| n.iter().map(|num| std::char::from_u32(*num).unwrap_or(' ')).collect()
             )
     }
 
-    pub fn get_u32(&self, key: &str) -> Option<&Vec<u32>> {
+    pub fn get_u32(&self, key: &CharGroups<T>) -> Option<&Vec<u32>> {
         self.list.get(key)
     }
+}
+
+fn create_smile() -> Vec<u32> {
+    (128512..128518).collect()
 }
 
 fn create_moon() -> Vec<u32> {
@@ -73,16 +126,4 @@ fn create_all() -> Vec<u32> {
     a.append(&mut create_shape());
     a.append(&mut create_arrows());
     a
-}
-
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let e = EZEmojis::new();
-        assert_eq!(e.get_u32("shape"), Some(&vec![128992, 128993, 128994, 128995, 128996, 128997, 128998, 128999, 129000, 129001, 129002, 129003]));
-    }
 }

@@ -9,6 +9,8 @@ use std::hash::Hash;
 /// correct me if I am wrong.
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum EmojiGroups {
+    Emojis,
+    Japanese,
     Smile,
     Moon,
     Earth,
@@ -36,20 +38,14 @@ impl<T: Hash + Eq> CharGroups<T> {
     pub fn custom(v: T) -> Self {Self::Custom(v)}
 }
 
-/// User Implemented Groups
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
-pub enum Custom {
-    C,
-    D,
-}
-
-
 /// Creates A `HashMap<EmojiGroups, Vec<u32>>` and returns it.
 pub fn create_emoji_data<T: Hash + Eq>() -> HashMap<CharGroups<T>, Vec<u32>> {
         let mut hash = HashMap::new();
+        hash.insert(EmojiGroups::Emojis.into(), create_emojis());
         // FIXME:
         hash.insert(EmojiGroups::Smile.into(), create_smile());
 
+        hash.insert(EmojiGroups::Japanese.into(), create_jap());
         hash.insert(EmojiGroups::Moon.into(), create_moon());
         hash.insert(EmojiGroups::Earth.into(), create_earth());
         hash.insert(EmojiGroups::Plant.into(), create_plant());
@@ -85,8 +81,16 @@ impl<T: Hash + Eq> EZEmojis<T> {
     }
 }
 
+fn create_emojis() -> Vec<u32> {
+    (129292..=129535).collect()
+}
+
 fn create_smile() -> Vec<u32> {
-    (128512..128518).collect()
+    (128512..=128518).collect()
+}
+
+fn create_jap() -> Vec<u32> {
+    (65382..=65437).collect()
 }
 
 fn create_moon() -> Vec<u32> {

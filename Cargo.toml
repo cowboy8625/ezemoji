@@ -1,6 +1,6 @@
 [package]
 name = "ezemoji"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["cowboy8625 <cowboy8625@protonmail.com>"]
 edition = "2018"
 description = "Catigoryized Emoji's"
@@ -8,5 +8,3 @@ readme = "README.md"
 repository = "https://github.com/cowboy8625/ezemoji"
 keywords = ["emoji"]
 license-file = "LICENSE"
-
-[dependencies]

@@ -27,6 +27,7 @@ pub enum EmojiGroups {
     NumberedBalls,
     NumberedCubes,
     LargeLetter,
+    Crab,
     All,
 }
 
@@ -77,6 +78,7 @@ pub fn create_emoji_data<T: Hash + Eq>() -> HashMap<CharGroups<T>, Vec<u32>> {
         create_letter_cube_solid(),
     );
     hash.insert(EmojiGroups::LargeLetter.into(), create_bold_large_letters());
+    hash.insert(EmojiGroups::Crab.into(), create_crab());
     hash.insert(EmojiGroups::All.into(), create_all());
     hash
 }
@@ -146,6 +148,10 @@ pub fn create_shape() -> Vec<u32> {
     (128992..=129003).collect()
 }
 
+pub fn create_crab() -> Vec<u32> {
+    vec![129408]
+}
+
 pub fn create_arrows() -> Vec<u32> {
     let mut a: Vec<u32> = (129024..=129035).collect();
     a.append(&mut (129040..=129095).collect());
@@ -165,6 +171,7 @@ pub fn create_all() -> Vec<u32> {
     a.append(&mut create_hdominos());
     a.append(&mut create_vdominos());
     a.append(&mut create_cards());
+    a.append(&mut create_crab());
     a.append(&mut create_letter_ball_solid());
     a.append(&mut create_letter_cube_solid());
     a.append(&mut create_bold_large_letters());

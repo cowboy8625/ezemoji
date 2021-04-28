@@ -7,10 +7,10 @@ so just a warning that the api may change a lot in the coming updates.
 
 ## Example
 ```rust
-# use ezemoji::{EZEmoji, Crab};
-# fn main() {
+use ezemoji::{EZEmoji, Crab};
+fn main() {
     println!("{:?}", Crab.as_vec_char());
-# }
+}
 ```
 
 

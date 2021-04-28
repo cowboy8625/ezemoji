@@ -16,9 +16,10 @@ This Project is to make finding Emoji's and Char Groups a bit easier. (WIP)
 
 EZEmojis is a Work in progress made for use in
 **rusty-rain** which is a **CMatrix** clone
-[website](https://rusty-rain.xyz)
-[github](https://github.com/cowboy/rusty-rain)
-[crates.io](https://crates.io/crates/rusty-rain)
+#### Rusty Rain
+ - [Website](https://rusty-rain.xyz)
+ - [Github](https://github.com/cowboy/rusty-rain)
+ - [Crates.io](https://crates.io/crates/rusty-rain)
 
 #### Warning
 The api may change a lot in the coming updates.

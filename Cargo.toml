@@ -1,6 +1,6 @@
 [package]
 name = "ezemoji"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["cowboy8625 <cowboy8625@protonmail.com>"]
 edition = "2018"
 description = "Catigoryized Emoji's"

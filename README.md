@@ -14,8 +14,14 @@ EZEmoji
 
 This Project is to make finding Emoji's and Char Groups a bit easier. (WIP)
 
-EZEmojis is a Work in progress made for [rust-rain](https://rusty-rain.xyz) program
-so just a warning that the api may change a lot in the coming updates.
+EZEmojis is a Work in progress made for use in
+**rusty-rain** which is a **CMatrix** clone
+[website](https://rusty-rain.xyz)
+[github](https://github.com/cowboy/rusty-rain)
+[crates.io](https://crates.io/crates/rusty-rain)
+
+#### Warning
+The api may change a lot in the coming updates.
 
 ## Example
 ```rust
@@ -41,5 +47,5 @@ impl EZEmoji for MyEmojiGroup {
 ```
 
 ### HELP
-If you have any ideas for this crate make an issue and lets talk about it.
-[github page](https://github.com/cowboy8625/ezemoji)
+If you have any ideas for this crate make an [issue](https://github.com/cowboy8625/ezemoji/issues) and lets talk about it.
+

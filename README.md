@@ -1,4 +1,16 @@
-# EZEmoji
+<h1 align="center">
+EZEmoji
+</h1>
+
+<p align="center">
+  <a href="https://crates.io/crates/ezemoji"><img alt="crates.io" src="https://img.shields.io/crates/v/ezemoji.svg"></a>
+  <a><img alt="lastupdated" src="https://img.shields.io/github/last-commit/cowboy8625/ezemoji"></a>
+  <a><img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/cowboy8625/ezemoji"></a>
+  <a><img alt="issuse" src="https://img.shields.io/github/issues/cowboy8625/ezemoji"></a>
+  <a><img alt="Lines of Code" src="https://img.shields.io/tokei/lines/github/cowboy8625/ezemoji"></a>
+  <a><img alt="License" src="https://img.shields.io/badge/License-MIT-blue.svg"></a>
+  <a href="https://discord.gg/KwnGX8P"><img alt="Discord Chat" src="https://img.shields.io/discord/509849754155614230"></a>
+</p>
 
 This Project is to make finding Emoji's and Char Groups a bit easier. (WIP)
 

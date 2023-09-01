@@ -236,6 +236,22 @@ impl EZEmoji for AlphaNumeric {
     }
 }
 
+
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Classic;
+impl EZEmoji for Classic {
+    fn as_vec_u32(&self) -> Vec<u32> {
+        let mut classic = Japanese.as_vec_u32();                                //   Half-width katakana
+        // classic.extend_from_slice(&vec![26091]);                             //   日 --> Needs Double width
+        classic.extend_from_slice(&Numbers.as_vec_u32());                       //   0-9
+        classic.extend_from_slice(&vec![34, 42, 43, 45, 46, 58, 60, 61, 62 ]);  //   :."=*+-<>
+        classic.extend_from_slice(&vec![166, 124 ]);                            //   ¦|
+        classic
+    }
+}
+
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct AllEmojis;
 impl EZEmoji for AllEmojis {

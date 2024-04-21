@@ -237,6 +237,20 @@ impl EZEmoji for AlphaNumeric {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct OpenSource;
+impl EZEmoji for OpenSource {
+    fn as_vec_u32(&self) -> Vec<u32> {
+        let mut open_source = (62208..=62325).collect::<Vec<u32>>(); // All Font Logos
+        open_source.retain(|&x| x != 62210); // Remove Apple logo
+        open_source.extend_from_slice(&[59205, 59257]); // Devicons
+        open_source.extend_from_slice(&[58930, 58931, 59054]); // Nerd Fonts custom icons
+        open_source.extend_from_slice(&[58975]); // Seti-UI
+        open_source.extend_from_slice(&[983211, 983714, 984444]); // Material Design Icons
+        open_source
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct AllEmojis;
 impl EZEmoji for AllEmojis {
     fn as_vec_u32(&self) -> Vec<u32> {
@@ -254,6 +268,7 @@ impl EZEmoji for AllEmojis {
         all.extend_from_slice(&NumberedCubes.as_vec_u32());
         all.extend_from_slice(&LargeLetter.as_vec_u32());
         all.extend_from_slice(&AlphaNumeric.as_vec_u32());
+        all.extend_from_slice(&OpenSource.as_vec_u32());
         all
     }
 }

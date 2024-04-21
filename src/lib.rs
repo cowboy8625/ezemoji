@@ -251,6 +251,21 @@ impl EZEmoji for OpenSource {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ProgrammingLanguages;
+impl EZEmoji for ProgrammingLanguages {
+    fn as_vec_u32(&self) -> Vec<u32> {
+        let prog_langs = vec![
+            57918, 58888, 58909, 58910, 58912, 58916, 58919, 58920, 58923, 58924, 58925, 58927,
+            58928, 58930, 58932, 58949, 58956, 58960, 58975, 58995, 58999, 59002, 59006, 59018,
+            59031, 59040, 59049, 59057, 59058, 59061, 59190, 59191, 59192, 59196, 59196, 59198,
+            59209, 59211, 59214, 59217, 59242, 59253, 59255, 59303, 59304, 59313, 60175, 60362,
+            61118, 62227, 62283, 983835, 984965, 985207, 985610, 987674,
+        ]; // From all Nerd Fonts
+        prog_langs
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct AllEmojis;
 impl EZEmoji for AllEmojis {
     fn as_vec_u32(&self) -> Vec<u32> {
@@ -269,6 +284,7 @@ impl EZEmoji for AllEmojis {
         all.extend_from_slice(&LargeLetter.as_vec_u32());
         all.extend_from_slice(&AlphaNumeric.as_vec_u32());
         all.extend_from_slice(&OpenSource.as_vec_u32());
+        all.extend_from_slice(&ProgrammingLanguages.as_vec_u32());
         all
     }
 }

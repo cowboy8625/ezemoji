@@ -29,7 +29,7 @@ Add `ezemoji` to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-ezemoji = "0.2"
+ezemoji = "1.0.0"
 ```
 
 ## Used in

@@ -12,41 +12,34 @@ EZEmoji
   <a href="https://discord.gg/KwnGX8P"><img alt="Discord Chat" src="https://img.shields.io/discord/509849754155614230"></a>
 </p>
 
-This Project is to make finding Emoji's and Char Groups a bit easier. (WIP)
+`ezemoji` is a **compile-time Rust library** that provides convenient access to groups of Unicode characters, including emojis, symbols, letters, numbers, and more. All character groups are generated at **compile time**, making it extremely efficient and suitable for `no_std` and embedded environments, with optional `alloc` support.
 
-EZEmojis is a Work in progress made for use in
-**rusty-rain** which is a **CMatrix** clone
-#### Rusty Rain
- - [Website](https://rusty-rain.xyz)
- - [Github](https://github.com/cowboy/rusty-rain)
- - [Crates.io](https://crates.io/crates/rusty-rain)
+## Features
 
-#### Warning
-The api may change a lot in the coming updates.
+- **Compile-time character groups**: All slices of characters are generated at compile time for zero runtime cost.
+- Access predefined groups like letters, numbers, emojis, shapes, and arrows.
+- Iterate over characters as `u32` code points.
+- Determine character display width (`Single` or `Double`) at runtime.
+- **Custom extendable groups**: Users can define their own character sets at compile time.
+- Fully `no_std` compatible, with optional `alloc` support for dynamic structures.
 
-## Example
-```rust
-use ezemoji::{EZEmoji, Crab};
-fn main() {
-    println!("{:?}", Crab.as_vec_char());
-}
+## Installation
+
+Add `ezemoji` to your `Cargo.toml`:
+
+```toml
+[dependencies]
+ezemoji = "0.2"
 ```
 
+## Used in
 
-The `trait` `EZEmoji` is provided to glue all the types together.
-You can implement it for your own type like
+- [Rusty Rain](https://github.com/cowboy/rusty-rain)
 
-```rust
-use ezemoji::EZEmoji;
+## Contributing
 
-struct MyEmojiGroup;
-impl EZEmoji for MyEmojiGroup {
-    fn as_vec_u32(&self) -> Vec<u32> {
-        vec![96]
-    }
-}
-```
+Contributions are welcome! Feel free to open an issue or submit a pull request.
 
-### HELP
-If you have any ideas for this crate make an [issue](https://github.com/cowboy8625/ezemoji/issues) and lets talk about it.
+## License
 
+MIT / Apache-2.0

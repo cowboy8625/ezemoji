@@ -13,9 +13,9 @@
 //!
 //! // Iterate over lowercase alphabet characters
 //! let alpha_group = CharGroup::ALPHALOW;
-//! for cp in alpha_group.as_slice_u32() {
+//! for cp in alpha_group.iter() {
 //!     // Print the Unicode code point
-//!     println!("U+{:04X}", cp);
+//!     println!("{}", cp);
 //! }
 //!
 //! // Access a numeric group and check display width
@@ -26,176 +26,92 @@
 //! ### Defining your own custom group
 //!
 //! ```rust
-//! use ezemoji::{CharGroup, GroupKind, CharWidth};
+//! use ezemoji::{CharGroup, GroupKind, CharWidth, MultiRange};
 //!
-//! // Create a group of just crab emojis
-//! let crab_group = CharGroup::new(GroupKind::Crab, &[0x1F980, 0x1F981], CharWidth::Double);
-//! assert_eq!(crab_group.width(), 2); // Emoji are double-width
+//! // Create a new custom group of just crab emojis
+//! let crab_group = CharGroup::new(GroupKind::Custom("crab"), MultiRange::new(&[0x1F980..0x1F981]), CharWidth::Double);
+//! assert_eq!(crab_group.width(), 2); // This emoji is double-width
 //! ```
-//!
-//! ## Notes
-//! - All character groups are compile-time `&'static [u32]` slices. Iterating them has zero runtime cost.
-//! - `width()` returns 1 for ASCII characters, 2 for most emojis and wide symbols.
-//! - You can define your own `CharGroup` by providing a name and a static slice of `u32` codepoints.
-
 #![cfg_attr(not(test), no_std)]
 
-macro_rules! static_range {
-    ($name:ident, $start:literal, $end:literal) => {
-        const $name: &[u32] = &{
-            const LEN: usize = ($end - $start + 1) as usize;
-            let mut arr = [0u32; LEN];
-            let mut i = 0;
-            while i < LEN {
-                arr[i] = $start + i as u32;
-                i += 1;
-            }
-            arr
-        };
-    };
+use core::{ops::Range, str::FromStr};
+
+pub const ALPHALOW_RANGE: Range<u32> = 97..123;
+pub const ALPHANUM_RANGE: Range<u32> = 48..58;
+pub const ALPHAUP_RANGE: Range<u32> = 65..91;
+pub const ARROW_0_RANGE: Range<u32> = 129_024..129_036;
+pub const ARROW_1_RANGE: Range<u32> = 129_040..129_096;
+pub const ARROW_2_RANGE: Range<u32> = 129_104..129_113;
+pub const BIN_RANGE: Range<u32> = 48..50;
+pub const BRAILLE_RANGE: Range<u32> = 10_241..10_252;
+pub const CARD_0_RANGE: Range<u32> = 127_130..127_145;
+pub const CARD_1_RANGE: Range<u32> = 127_148..127_162;
+pub const CARD_2_RANGE: Range<u32> = 127_163..127_178;
+pub const CARD_3_RANGE: Range<u32> = 127_179..127_240;
+pub const CLOCK_RANGE: Range<u32> = 128_336..128_360;
+pub const CRAB_RANGE: Range<u32> = 129_408..129_409;
+pub const DOMINOSH_RANGE: Range<u32> = 127_024..127_073;
+pub const DOMINOSV_RANGE: Range<u32> = 127_074..127_123;
+pub const EARTH_RANGE: Range<u32> = 127_757..127_760;
+pub const EMOJIS_0_RANGE: Range<u32> = 129_292..129_401;
+pub const EMOJIS_1_RANGE: Range<u32> = 129_402..129_483;
+pub const EMOJIS_2_RANGE: Range<u32> = 129_484..129_536;
+pub const JAP_RANGE: Range<u32> = 65_382..65_437;
+pub const LARGELETTERS_RANGE: Range<u32> = 65_313..65_338;
+pub const LETTEREDCUBES_RANGE: Range<u32> = 127_344..127_369;
+pub const MOON_RANGE: Range<u32> = 127_761..127_773;
+pub const NUMBEREDBALLS_RANGE: Range<u32> = 9_312..9_332;
+pub const NUM_RANGE: Range<u32> = 48..57;
+pub const PLANTS_RANGE: Range<u32> = 127_793..127_827;
+pub const SHAPES_RANGE: Range<u32> = 128_992..129_003;
+pub const SMILE_RANGE: Range<u32> = 128_512..128_518;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct MultiRange {
+    ranges: &'static [Range<u32>],
 }
 
-macro_rules! all_slices {
-    ($($slice:ident),+ $(,)?) => {{
-        const LEN: usize = 0 $(+ $slice.len())+;
+impl MultiRange {
+    pub const fn new(ranges: &'static [Range<u32>]) -> Self {
+        MultiRange { ranges }
+    }
 
-        let mut arr = [0u32; LEN];
-        let mut i = 0;
-
-        $(
-            let mut j = 0;
-            while j < $slice.len() {
-                arr[i + j] = $slice[j];
-                j += 1;
-            }
-            i += $slice.len();
-            // Just to shut up the compiler
-            let _ = i;
-        )+
-
-        arr
-    }};
-}
-
-macro_rules! slice_skip_first {
-    ($name:ident, $src:ident) => {
-        const $name: &[u32] = &{
-            const LEN: usize = if $src.len() > 0 { $src.len() - 1 } else { 0 };
-            let mut arr = [0u32; LEN];
-            let mut i = 0;
-            while i < LEN {
-                arr[i] = $src[i + 1];
-                i += 1;
-            }
-            arr
-        };
-    };
-}
-
-static_range!(ALPHA_LOW_SLICE, 97, 122);
-static_range!(ALPHA_UP_SLICE, 65, 90);
-static_range!(NUM_SLICE, 48, 57);
-static_range!(BIN_SLICE, 48, 49);
-static_range!(CLOCK_SLICE, 128_336, 128_359);
-static_range!(DOMINOSH_SLICE, 127_024, 127_073);
-static_range!(DOMINOSV_SLICE, 127_074, 127_123);
-static_range!(EARTH_SLICE, 127_757, 127_760);
-static_range!(JAP_SLICE, 65_382, 65_437);
-static_range!(LARGE_LETTERS_SLICE, 127_462, 127_487);
-static_range!(MOON_SLICE, 127_760, 127_773);
-static_range!(NUMBERED_BALLS_SLICE, 127_312, 127_337);
-static_range!(NUMBERED_CUBES_SLICE, 127_344, 127_369);
-static_range!(PLANTS_SLICE, 127_793, 127_827);
-static_range!(SMILE_SLICE, 128_512, 128_518);
-static_range!(SHAPES_SLICE, 128_992, 129_003);
-slice_skip_first!(MOON_NO_EARTH_SLICE, MOON_SLICE);
-
-const CRAB_SLICE: &[u32] = &[129_408];
-
-const fn multi_range<const N: usize>(ranges: &[(u32, u32)]) -> [u32; N] {
-    let mut out = [0u32; N];
-    let mut idx = 0;
-    let mut r = 0;
-    while r < ranges.len() {
-        let (start, end) = ranges[r];
-        let mut v = start;
-        while v <= end {
-            out[idx] = v;
-            idx += 1;
-            v += 1;
+    pub fn iter(&self) -> MultiRangeIterator {
+        MultiRangeIterator {
+            ranges: self.ranges,
+            current_range: 0,
+            index_in_range: 0,
         }
-        r += 1;
     }
-    out
 }
 
-const ARROW_SLICE: &[u32] = &multi_range::<
-    {
-        (129_035 - 129_024 + 1)
-            + (129_095 - 129_040 + 1)
-            + (129_195 - 129_168 + 1)
-            + (129_113 - 129_104 + 1)
-    },
->(&[
-    (129_024, 129_035),
-    (129_040, 129_095),
-    (129_168, 129_195),
-    (129_104, 129_113),
-]);
+#[derive(Debug)]
+pub struct MultiRangeIterator<'a> {
+    ranges: &'a [Range<u32>],
+    current_range: usize,
+    index_in_range: u32,
+}
 
-const CARDS_SLICE: &[u32] = &multi_range::<
-    { (127_166 - 127_137 + 1) + (127_182 - 127_169 + 1) + (127_198 - 127_185 + 1) },
->(&[(127_137, 127_166), (127_169, 127_182), (127_185, 127_198)]);
+impl<'a> Iterator for MultiRangeIterator<'a> {
+    type Item = char;
 
-const EMOJIS_SLICE: &[u32] = &multi_range::<
-    { (129_400 - 129_292 + 1) + (129_482 - 129_402 + 1) + (129_535 - 129_484 + 1) },
->(&[(129_292, 129_400), (129_402, 129_482), (129_484, 129_535)]);
+    fn next(&mut self) -> Option<Self::Item> {
+        while self.current_range < self.ranges.len() {
+            let r = &self.ranges[self.current_range];
+            let value = r.start + self.index_in_range;
 
-const ALPHA_NUM_SLICE: &[u32] = &{
-    const LEN: usize = ALPHA_LOW_SLICE.len() + ALPHA_UP_SLICE.len() + NUM_SLICE.len();
-    let mut arr = [0u32; LEN];
-    let mut i = 0;
-    while i < ALPHA_LOW_SLICE.len() {
-        arr[i] = ALPHA_LOW_SLICE[i];
-        i += 1;
+            if value >= r.end {
+                self.current_range += 1;
+                self.index_in_range = 0;
+                continue;
+            }
+
+            self.index_in_range += 1;
+            return char::from_u32(value);
+        }
+        None
     }
-    let mut j = 0;
-    while j < ALPHA_UP_SLICE.len() {
-        arr[i + j] = ALPHA_UP_SLICE[j];
-        j += 1;
-    }
-    let mut k = 0;
-    while k < NUM_SLICE.len() {
-        arr[i + j + k] = NUM_SLICE[k];
-        k += 1;
-    }
-    arr
-};
-
-const ALL_SLICE: &[u32] = &all_slices!(
-    // REMOVE ALPHA_NUM_SLICE (it’s inside ALPHA_LOW_SLICE and ALPHA_UP_SLICE)
-    ALPHA_LOW_SLICE,
-    ALPHA_UP_SLICE,
-    NUM_SLICE,
-    ARROW_SLICE,
-    // REMOVED BIN_SLICE (it's inside NUM_SLICE)
-    CARDS_SLICE,
-    CLOCK_SLICE,
-    // REMOVE CRAB_SLICE (it’s inside emojis)
-    DOMINOSH_SLICE,
-    DOMINOSV_SLICE,
-    EARTH_SLICE,
-    EMOJIS_SLICE,
-    JAP_SLICE,
-    LARGE_LETTERS_SLICE,
-    // use de-overlapped moon slice
-    MOON_NO_EARTH_SLICE,
-    NUMBERED_BALLS_SLICE,
-    NUMBERED_CUBES_SLICE,
-    PLANTS_SLICE,
-    SMILE_SLICE,
-    SHAPES_SLICE,
-);
+}
 
 /// A named group of Unicode characters.
 ///
@@ -208,78 +124,267 @@ const ALL_SLICE: &[u32] = &all_slices!(
 /// ```rust
 /// # use ezemoji::{CharGroup, GroupKind};
 /// let alpha_group = CharGroup::ALPHALOW;
-/// for c in alpha_group.as_slice_u32() {
+/// for c in alpha_group.iter() {
 ///     println!("{}", c);
 /// }
 /// println!("Max width: {}", alpha_group.width());
 /// ```
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct CharGroup {
     /// The name of this character group.
     pub name: GroupKind,
 
-    /// The characters in this group as Unicode code points.
-    pub chars: &'static [u32],
+    /// A range of characters in this group.
+    pub range: MultiRange,
 
     /// The maximum display width of characters in this group.
     pub char_width: CharWidth,
 }
 
 impl CharGroup {
-    pub const ALL: Self = CharGroup::new(GroupKind::All, ALL_SLICE, CharWidth::Double);
-    pub const ALPHALOW: Self =
-        CharGroup::new(GroupKind::Alphalow, ALPHA_LOW_SLICE, CharWidth::Single);
-    pub const ALPHAUP: Self = CharGroup::new(GroupKind::Alphaup, ALPHA_UP_SLICE, CharWidth::Single);
-    pub const ALPHANUM: Self =
-        CharGroup::new(GroupKind::AlphaNum, ALPHA_NUM_SLICE, CharWidth::Single);
-    pub const ARROW: Self = CharGroup::new(GroupKind::Arrow, ARROW_SLICE, CharWidth::Double);
-    pub const BIN: Self = CharGroup::new(GroupKind::Bin, BIN_SLICE, CharWidth::Single);
-    pub const CARDS: Self = CharGroup::new(GroupKind::Cards, CARDS_SLICE, CharWidth::Double);
-    pub const CLOCK: Self = CharGroup::new(GroupKind::Clock, CLOCK_SLICE, CharWidth::Double);
-    pub const CRAB: Self = CharGroup::new(GroupKind::Crab, CRAB_SLICE, CharWidth::Double);
-    pub const DOMINOSH: Self =
-        CharGroup::new(GroupKind::Dominosh, DOMINOSH_SLICE, CharWidth::Double);
-    pub const DOMINOSV: Self =
-        CharGroup::new(GroupKind::Dominosv, DOMINOSV_SLICE, CharWidth::Single);
-    pub const EARTH: Self = CharGroup::new(GroupKind::Earth, EARTH_SLICE, CharWidth::Double);
-    pub const EMOJIS: Self = CharGroup::new(GroupKind::Emojis, EMOJIS_SLICE, CharWidth::Double);
-    pub const JAP: Self = CharGroup::new(GroupKind::Jap, JAP_SLICE, CharWidth::Single);
+    pub const ALL: CharGroup = CharGroup::new(
+        GroupKind::All,
+        MultiRange::new(&[
+            // REMOVE ALPHA_NUM_SLICE (it’s inside ALPHA_LOW_SLICE and ALPHA_UP_SLICE)
+            ALPHALOW_RANGE,
+            ALPHAUP_RANGE,
+            NUM_RANGE,
+            ARROW_0_RANGE,
+            ARROW_1_RANGE,
+            ARROW_2_RANGE,
+            // REMOVED BIN_RANGE (it's inside NUM_SLICE)
+            CARD_0_RANGE,
+            CARD_1_RANGE,
+            CARD_2_RANGE,
+            CARD_3_RANGE,
+            CLOCK_RANGE,
+            // REMOVE CRAB_RANGE (it’s inside emojis)
+            DOMINOSH_RANGE,
+            DOMINOSV_RANGE,
+            EMOJIS_0_RANGE,
+            EMOJIS_1_RANGE,
+            EMOJIS_2_RANGE,
+            JAP_RANGE,
+            LARGELETTERS_RANGE,
+            // use de-overlapped moon slice
+            MOON_RANGE,
+            EARTH_RANGE,
+            NUMBEREDBALLS_RANGE,
+            LETTEREDCUBES_RANGE,
+            PLANTS_RANGE,
+            SMILE_RANGE,
+            SHAPES_RANGE,
+        ]),
+        CharWidth::Double,
+    );
+
+    pub const ALPHALOW: Self = Self::new(
+        GroupKind::AlphaLow,
+        // a-z
+        MultiRange::new(&[ALPHALOW_RANGE]),
+        CharWidth::Single,
+    );
+
+    pub const ALPHAUP: Self = Self::new(
+        GroupKind::AlphaUp,
+        // A-Z
+        MultiRange::new(&[ALPHAUP_RANGE]),
+        CharWidth::Single,
+    );
+
+    pub const ALPHANUM: Self = Self::new(
+        GroupKind::AlphaNum,
+        // 0-9
+        MultiRange::new(&[ALPHANUM_RANGE]),
+        CharWidth::Single,
+    );
+
+    pub const ARROW: Self = CharGroup::new(
+        GroupKind::Arrow,
+        //         skip🠇  🠇                                                        🠇 skip 🠇
+        // 🠀🠁🠂🠃🠄🠅🠆🠇🠈🠉🠊🠋🠌🠍🠎🠏🠐🠑🠒🠓🠔🠕🠖🠗🠘🠙🠚🠛🠜🠝🠞🠟🠠🠡🠢🠣🠤🠥🠦🠧🠨🠩🠪🠫🠬🠭🠮🠯🠰🠱🠲🠳🠴🠵🠶🠷🠸🠹🠺🠻🠼🠽🠾🠿🡀🡁🡂🡃🡄🡅🡆🡇🡈🡉🡊🡋🡌🡍🡎🡏🡐🡑🡒🡓🡔🡕🡖🡗🡘
+        // skip 129_036 .. 129_040 skip 129_096 .. 129_104 ),
+        MultiRange::new(&[ARROW_0_RANGE, ARROW_1_RANGE, ARROW_2_RANGE]),
+        CharWidth::Double,
+    );
+
+    pub const BIN: Self = CharGroup::new(
+        GroupKind::Bin,
+        // 0 1
+        MultiRange::new(&[BIN_RANGE]),
+        CharWidth::Single,
+    );
+
+    pub const BRAILLE: Self = CharGroup::new(
+        GroupKind::Braille,
+        // ⠁⠂⠃⠄⠅⠆⠇⠈⠉⠊⠋⠌⠍⠎⠏⠐⠑⠒⠓⠔⠕⠖⠗⠘⠙⠚⠛⠜⠝⠞⠟⠠⠡⠢⠣⠤⠥⠦⠧⠨⠩⠪⠫⠬⠭⠮⠯⠰⠱⠲⠳⠴⠵⠶⠷
+        // ⠸⠹⠺⠻⠼⠽⠾⠿⡀⡁⡂⡃⡄⡅⡆⡇⡈⡉⡊⡋⡌⡍⡎⡏⡐⡑⡒⡓⡔⡕⡖⡗⡘⡙⡚⡛⡜⡝⡞⡟⡠⡡⡢⡣⡤⡥⡦⡧⡨⡩⡪⡫⡬⡭⡮
+        // ⡯⡰⡱⡲⡳⡴⡵⡶⡷⡸⡹⡺⡻⡼⡽⡾⡿⢀⢁⢂⢃⢄⢅⢆⢇⢈⢉⢊⢋⢌⢍⢎⢏⢐⢑⢒⢓⢔⢕⢖⢗⢘⢙⢚⢛⢜⢝⢞⢟⢠⢡⢢⢣⢤⢥
+        // ⢦⢧⢨⢩⢪⢫⢬⢭⢮⢯⢰⢱⢲⢳⢴⢵⢶⢷⢸⢹⢺⢻⢼⢽⢾⢿⣀⣁⣂⣃⣄⣅⣆⣇⣈⣉⣊⣋⣌⣍⣎⣏⣐⣑⣒⣓⣔⣕⣖⣗⣘⣙⣚⣛⣜
+        // ⣝⣞⣟⣠⣡⣢⣣⣤⣥⣦⣧⣨⣩⣪⣫⣬⣭⣮⣯⣰⣱⣲⣳⣴⣵⣶⣷⣸⣹⣺⣻⣼⣽⣾
+        MultiRange::new(&[BRAILLE_RANGE]),
+        CharWidth::Single,
+    );
+
+    pub const CARDS: Self = CharGroup::new(
+        GroupKind::Cards,
+        //                           skip🠇🠇                          skip🠇
+        // 🂠🂡🂢🂣🂤🂥🂦🂧🂨🂩🂪🂫🂬🂭🂮🂯🂰🂱🂲🂳🂴🂵🂶🂷🂸🂹🂺🂻🂼🂽🂾🂿🃀🃁🃂🃃🃄🃅🃆🃇🃈🃉🃊🃋🃌🃍
+        // skip🠇
+        // 🃎🃏🃐🃑🃒🃓🃔🃕🃖🃗🃘🃙🃚🃛🃜🃝🃞🃟🃠🃡🃢🃣🃤🃥🃦🃧🃨🃩🃪🃫🃬🃭🃮🃯🃰🃱🃲🃳🃴🃵
+        // skip 127_145 .. 127_148 skip 127_162 .. 127_163 skip 127_178 .. 127_179 ),
+        MultiRange::new(&[CARD_0_RANGE, CARD_1_RANGE, CARD_2_RANGE, CARD_3_RANGE]),
+        CharWidth::Double,
+    );
+
+    pub const CLOCK: Self = CharGroup::new(
+        GroupKind::Clock,
+        // 🕐🕑🕒🕓🕔🕕🕖🕗🕘🕙🕚🕛🕜🕝🕞🕟🕠🕡🕢🕣🕤🕥🕦🕧
+        MultiRange::new(&[CLOCK_RANGE]),
+        CharWidth::Double,
+    );
+
+    pub const CRAB: Self = CharGroup::new(
+        GroupKind::Crab,
+        // 🦀
+        MultiRange::new(&[CRAB_RANGE]),
+        CharWidth::Double,
+    );
+
+    pub const DOMINOSH: Self = CharGroup::new(
+        GroupKind::Dominosh,
+        // 🀰🀱🀲🀳🀴🀵🀶🀷🀸🀹🀺🀻🀼🀽🀾🀿🁀🁁🁂🁃🁄🁅🁆🁇🁈🁉🁊🁋🁌🁍🁎🁏🁐🁑🁒🁓🁔🁕🁖🁗🁘🁙🁚🁛🁜🁝🁞🁟🁠
+        MultiRange::new(&[DOMINOSH_RANGE]),
+        CharWidth::Double,
+    );
+
+    pub const DOMINOSV: Self = CharGroup::new(
+        GroupKind::Dominosv,
+        // 🁢🁣🁤🁥🁦🁧🁨🁩🁪🁫🁬🁭🁮🁯🁰🁱🁲🁳🁴🁵🁶🁷🁸🁹🁺🁻🁼🁽🁾🁿🂀🂁🂂🂃🂄🂅🂆🂇🂈🂉🂊🂋🂌🂍🂎🂏🂐🂑🂒
+        MultiRange::new(&[DOMINOSV_RANGE]),
+        CharWidth::Single,
+    );
+
+    pub const EARTH: Self = CharGroup::new(
+        GroupKind::Earth,
+        // 🌍🌎🌏
+        MultiRange::new(&[EARTH_RANGE]),
+        CharWidth::Double,
+    );
+
+    pub const EMOJIS: Self = CharGroup::new(
+        GroupKind::Emojis,
+        // 🤌🤍🤎🤏🤐🤑🤒🤓🤔🤕🤖🤗🤘🤙🤚🤛🤜🤝🤞🤟🤠🤡🤢🤣🤤🤥🤦🤧🤨🤩🤪🤫🤬🤭
+        // 🤮🤯🤰🤱🤲🤳🤴🤵🤶🤷🤸🤹🤺🤻🤼🤽🤾🤿🥀🥁🥂🥃🥄🥅🥆🥇🥈🥉🥊🥋🥌🥍🥎🥏🥐
+        // 🥑🥒🥓🥔🥕🥖🥗🥘🥙🥚🥛🥜🥝🥞🥟🥠🥡🥢🥣🥤🥥🥦🥧🥨🥩🥪🥫🥬🥭🥮🥯🥰🥱🥲
+        // 🥳🥴🥵🥶🥷🥸🥺🥻🥼🥽🥾🥿🦀🦁🦂🦃🦄🦅🦆🦇🦈🦉🦊🦋🦌🦍🦎🦏🦐🦑🦒🦓🦔🦕
+        // 🦖🦗🦘🦙🦚🦛🦜🦝🦞🦟🦠🦡🦢🦣🦤🦥🦦🦧🦨🦩🦪🦫🦬🦭🦮🦯🦰🦱🦲🦳🦴🦵🦶🦷
+        // 🦸🦹🦺🦻🦼🦽🦾🦿🧀🧁🧂🧃🧄🧅🧆🧇🧈🧉🧊🧌🧍🧎🧏🧐🧑🧒🧓🧔🧕🧖🧗🧘🧙🧚
+        // 🧛🧜🧝🧞🧟🧠🧡🧢🧣🧤🧥🧦🧧🧨🧩🧪🧫🧬🧭🧮🧯🧰🧱🧲🧳🧴🧵🧶🧷🧸🧹🧺🧻🧼
+        // 🧽🧾
+        MultiRange::new(&[EMOJIS_0_RANGE, EMOJIS_1_RANGE, EMOJIS_2_RANGE]),
+        CharWidth::Double,
+    );
+
+    pub const JAP: Self = CharGroup::new(
+        GroupKind::Jap,
+        // NOTE: this messes with my editor so I fold it up
+        // ｦｧｨｩｪｫｬｭｮｯｰｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜ
+        MultiRange::new(&[JAP_RANGE]),
+        CharWidth::Single,
+    );
+
     pub const LARGELETTERS: Self = CharGroup::new(
         GroupKind::LargeLetters,
-        LARGE_LETTERS_SLICE,
+        // NOTE: I used to have
+        // 🇦 🇧 🇨 🇩 🇪 🇫 🇬 🇭 🇮 🇯 🇰 🇱 🇲 🇳 🇴 🇵 🇶 🇷 🇸 🇹 🇺 🇻 🇼 🇽 🇾
+        // But that makes the flags when they are next to each other
+        // 🇺 + 🇸 = 🇺🇸
+        // ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹ
+        MultiRange::new(&[LARGELETTERS_RANGE]),
         CharWidth::Double,
     );
-    pub const MOON: Self = CharGroup::new(GroupKind::Moon, MOON_SLICE, CharWidth::Double);
-    pub const NUM: Self = CharGroup::new(GroupKind::Num, NUM_SLICE, CharWidth::Single);
+
+    pub const MOON: Self = CharGroup::new(
+        GroupKind::Moon,
+        // 🌑🌒🌓🌔🌕🌖🌗🌘🌙🌚🌛
+        MultiRange::new(&[MOON_RANGE]),
+        CharWidth::Double,
+    );
+
+    pub const NUM: Self = CharGroup::new(
+        GroupKind::Num,
+        // 0..9
+        MultiRange::new(&[NUM_RANGE]),
+        CharWidth::Single,
+    );
+
     pub const NUMBEREDBALLS: Self = CharGroup::new(
         GroupKind::NumberedBalls,
-        NUMBERED_BALLS_SLICE,
+        // ①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳
+        MultiRange::new(&[NUMBEREDBALLS_RANGE]),
         CharWidth::Double,
     );
-    pub const NUMBEREDCUBES: Self = CharGroup::new(
-        GroupKind::NumberedCubes,
-        NUMBERED_CUBES_SLICE,
+
+    pub const LETTEREDCUBES: Self = CharGroup::new(
+        GroupKind::LetteredCubes,
+        // 🅰 🅱 🅲 🅳 🅴 🅵 🅶 🅷 🅸 🅹 🅺 🅻 🅼 🅽 🅾 🅿 🆀 🆁 🆂 🆃 🆄 🆅 🆆 🆇 🆈
+        MultiRange::new(&[LETTEREDCUBES_RANGE]),
         CharWidth::Double,
     );
-    pub const PLANTS: Self = CharGroup::new(GroupKind::Plants, PLANTS_SLICE, CharWidth::Double);
-    pub const SMILE: Self = CharGroup::new(GroupKind::Smile, SMILE_SLICE, CharWidth::Double);
-    pub const SHAPES: Self = CharGroup::new(GroupKind::Shapes, SHAPES_SLICE, CharWidth::Double);
-    pub const fn new(name: GroupKind, chars: &'static [u32], char_width: CharWidth) -> Self {
+
+    pub const PLANTS: Self = CharGroup::new(
+        GroupKind::Plants,
+        // 🌱 🌲 🌳 🌴 🌵 🌶 🌷 🌸 🌹 🌺 🌻 🌼 🌽 🌾 🌿 🍀 🍁 🍂 🍃 🍄 🍅 🍆 🍇
+        // 🍈 🍉 🍊 🍋 🍌 🍍 🍎 🍏 🍐 🍑 🍒
+        MultiRange::new(&[PLANTS_RANGE]),
+        CharWidth::Double,
+    );
+
+    pub const SMILE: Self = CharGroup::new(
+        GroupKind::Smile,
+        // 😀😁😂😃😄😅
+        MultiRange::new(&[SMILE_RANGE]),
+        CharWidth::Double,
+    );
+
+    pub const SHAPES: Self = CharGroup::new(
+        GroupKind::Shapes,
+        // 🟨🟩🟪
+        MultiRange::new(&[SHAPES_RANGE]),
+        CharWidth::Double,
+    );
+
+    pub const fn new(name: GroupKind, range: MultiRange, char_width: CharWidth) -> Self {
         Self {
             name,
-            chars,
+            range,
             char_width,
         }
     }
 
     #[inline]
+    pub fn iter(&self) -> MultiRangeIterator {
+        self.range.iter()
+    }
+
+    #[cfg(feature = "alloc")]
+    #[inline]
     pub fn as_slice_u32(&self) -> &[u32] {
-        self.chars.iter().as_slice()
+        self.range.iter().as_slice()
     }
 
     #[inline]
     pub const fn width(&self) -> u8 {
         self.char_width as u8
+    }
+}
+
+impl<'a> IntoIterator for &'a MultiRange {
+    type Item = char;
+    type IntoIter = MultiRangeIterator<'a>;
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
     }
 }
 
@@ -294,77 +399,73 @@ pub enum CharWidth {
 #[repr(u8)]
 pub enum GroupKind {
     All,
-    Alphalow,
-    Alphaup,
+    AlphaLow,
     AlphaNum,
+    AlphaUp,
     Arrow,
     Bin,
+    Braille,
     Cards,
     Clock,
     Crab,
+    Custom(&'static str),
     Dominosh,
     Dominosv,
     Earth,
     Emojis,
     Jap,
     LargeLetters,
+    LetteredCubes,
     Moon,
     Num,
     NumberedBalls,
-    NumberedCubes,
     Plants,
-    Smile,
     Shapes,
+    Smile,
+}
+
+impl FromStr for CharGroup {
+    type Err = &'static str;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "all" => Ok(CharGroup::ALL),
+            "alphalow" => Ok(CharGroup::ALPHALOW),
+            "alphanum" => Ok(CharGroup::ALPHANUM),
+            "alphaup" => Ok(CharGroup::ALPHAUP),
+            "arrow" => Ok(CharGroup::ARROW),
+            "bin" => Ok(CharGroup::BIN),
+            "braille" => Ok(CharGroup::BRAILLE),
+            "cards" => Ok(CharGroup::CARDS),
+            "clock" => Ok(CharGroup::CLOCK),
+            "crab" => Ok(CharGroup::CRAB),
+            "dominosh" => Ok(CharGroup::DOMINOSH),
+            "dominosv" => Ok(CharGroup::DOMINOSV),
+            "earth" => Ok(CharGroup::EARTH),
+            "emojis" => Ok(CharGroup::EMOJIS),
+            "jap" => Ok(CharGroup::JAP),
+            "large-letters" => Ok(CharGroup::LARGELETTERS),
+            "lettered-cubes" => Ok(CharGroup::LETTEREDCUBES),
+            "moon" => Ok(CharGroup::MOON),
+            "num" => Ok(CharGroup::NUM),
+            "numbered-balls" => Ok(CharGroup::NUMBEREDBALLS),
+            "plants" => Ok(CharGroup::PLANTS),
+            "shapes" => Ok(CharGroup::SHAPES),
+            "smile" => Ok(CharGroup::SMILE),
+            // custom => Ok(CharGroup::new(
+            //     GroupKind::Custom(&custom),
+            //     MultiRange::new(&[]),
+            //     CharWidth::Single,
+            // )),
+            _ => Err("Invalid group kind"),
+        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use pretty_assertions::assert_eq;
-    #[test]
-    fn no_unexpected_duplicates() {}
-
-    #[test]
-    fn static_range_creates_correct_values() {
-        assert_eq!(ALPHA_LOW_SLICE, &(97u32..=122).collect::<Vec<_>>()[..]);
-        assert_eq!(ALPHA_UP_SLICE, &(65u32..=90).collect::<Vec<_>>()[..]);
-        assert_eq!(NUM_SLICE, &(48u32..=57).collect::<Vec<_>>()[..]);
-    }
-
-    #[test]
-    fn multi_range_creates_correct_values() {
-        let expected_arrows: Vec<u32> = (129_024..=129_035)
-            .chain(129_040..=129_095)
-            .chain(129_168..=129_195)
-            .chain(129_104..=129_113)
-            .collect();
-        assert_eq!(ARROW_SLICE, &expected_arrows);
-
-        let expected_cards: Vec<u32> = (127_137..=127_166)
-            .chain(127_169..=127_182)
-            .chain(127_185..=127_198)
-            .collect();
-        assert_eq!(CARDS_SLICE, &expected_cards);
-    }
-
-    #[test]
-    fn no_unexpected_duplicates_in_all_slice() {
-        let mut seen = std::collections::HashSet::new();
-        for (i, &cp) in ALL_SLICE.iter().enumerate() {
-            assert!(
-                seen.insert(cp),
-                "Duplicate codepoint found: U+{cp:04X} at index {i}"
-            );
-        }
-    }
-
-    #[test]
-    fn group_consts_match_expected_slices() {
-        assert_eq!(CharGroup::ALL.chars, ALL_SLICE);
-        assert_eq!(CharGroup::ALPHALOW.chars, ALPHA_LOW_SLICE);
-        assert_eq!(CharGroup::ALPHAUP.chars, ALPHA_UP_SLICE);
-        assert_eq!(CharGroup::ALPHANUM.chars, ALPHA_NUM_SLICE);
-    }
 
     macro_rules! width_calculation {
         ($name:ident, $group:ident, $expected:literal) => {
@@ -381,6 +482,7 @@ mod tests {
     width_calculation!(width_calculation_for_alphanum, ALPHANUM, 1);
     width_calculation!(width_calculation_for_arrow, ARROW, 2);
     width_calculation!(width_calculation_for_bin, BIN, 1);
+    width_calculation!(width_calculation_for_braille, BRAILLE, 1);
     width_calculation!(width_calculation_for_cards, CARDS, 2);
     width_calculation!(width_calculation_for_clock, CLOCK, 2);
     width_calculation!(width_calculation_for_crab, CRAB, 2);
@@ -393,7 +495,7 @@ mod tests {
     width_calculation!(width_calculation_for_moon, MOON, 2);
     width_calculation!(width_calculation_for_num, NUM, 1);
     width_calculation!(width_calculation_for_numberedballs, NUMBEREDBALLS, 2);
-    width_calculation!(width_calculation_for_numberedcubes, NUMBEREDCUBES, 2);
+    width_calculation!(width_calculation_for_lettered_cubes, LETTEREDCUBES, 2);
     width_calculation!(width_calculation_for_plants, PLANTS, 2);
     width_calculation!(width_calculation_for_smile, SMILE, 2);
     width_calculation!(width_calculation_for_shapes, SHAPES, 2);

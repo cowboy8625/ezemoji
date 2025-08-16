@@ -387,8 +387,19 @@ impl CharGroup {
         self.char_width as u8
     }
 
+    /// Returns the character at the given index.
     pub fn nth_char(&self, index: usize) -> Option<char> {
-        self.iter().nth(index)
+        let index = index as u32;
+        let mut i = 0u32;
+        for range in self.range.ranges.iter() {
+            let step = range.end - range.start;
+            if index >= i && index < i + step {
+                let offset = index - i;
+                return char::from_u32(range.start + offset);
+            }
+            i += step;
+        }
+        return None;
     }
 }
 
@@ -470,6 +481,13 @@ impl FromStr for CharGroup {
 mod tests {
     use super::*;
     use pretty_assertions::assert_eq;
+
+    #[test]
+    fn test_nth_char() {
+        let group = CharGroup::ALPHALOW;
+        assert_eq!(group.nth_char(0), Some('a'));
+        assert_eq!(group.nth_char(25), Some('z'));
+    }
 
     macro_rules! width_calculation {
         ($name:ident, $group:ident, $expected:literal) => {

@@ -147,6 +147,8 @@ pub struct CharGroup {
 
     /// The maximum display width of characters in this group.
     pub char_width: CharWidth,
+
+    pub len: usize,
 }
 
 impl CharGroup {
@@ -364,10 +366,18 @@ impl CharGroup {
     );
 
     pub const fn new(name: GroupKind, range: MultiRange, char_width: CharWidth) -> Self {
+        let mut len = 0;
+        let mut i = 0;
+        while i < range.ranges.len() {
+            len += (range.ranges[i].end - range.ranges[i].start) as usize;
+            i += 1;
+        }
+
         Self {
             name,
             range,
             char_width,
+            len,
         }
     }
 
@@ -400,6 +410,10 @@ impl CharGroup {
             i += step;
         }
         return None;
+    }
+
+    pub const fn len(&self) -> usize {
+        self.len
     }
 }
 
@@ -483,7 +497,13 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     #[test]
-    fn test_nth_char() {
+    fn test_group_length() {
+        let group = CharGroup::ALPHALOW;
+        assert_eq!(group.len(), 26);
+    }
+
+    #[test]
+    fn test_group_nth_char() {
         let group = CharGroup::ALPHALOW;
         assert_eq!(group.nth_char(0), Some('a'));
         assert_eq!(group.nth_char(25), Some('z'));

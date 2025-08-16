@@ -9,6 +9,7 @@
 //! ### Using predefined groups
 //!
 //! ```rust
+//! #[cfg(feature = "std")]
 //! use ezemoji::{CharGroup, GroupKind};
 //!
 //! // Iterate over lowercase alphabet characters
@@ -409,11 +410,15 @@ impl CharGroup {
             }
             i += step;
         }
-        return None;
+        None
     }
 
     pub const fn len(&self) -> usize {
         self.len
+    }
+
+    pub const fn is_empty(&self) -> bool {
+        self.len == 0
     }
 }
 

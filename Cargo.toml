@@ -12,5 +12,8 @@ license-file = "LICENSE"
 [dev-dependencies]
 pretty_assertions = "1.4.1"
 
+[features]
+alloc = []
+
 [badges]
 travis-ci = { repository = "cowboy8625/ezemoji" }

@@ -85,6 +85,14 @@ impl MultiRange {
     }
 }
 
+impl<'a> IntoIterator for &'a MultiRange {
+    type Item = char;
+    type IntoIter = MultiRangeIterator<'a>;
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
 #[derive(Debug)]
 pub struct MultiRangeIterator<'a> {
     ranges: &'a [Range<u32>],
@@ -378,13 +386,9 @@ impl CharGroup {
     pub const fn width(&self) -> u8 {
         self.char_width as u8
     }
-}
 
-impl<'a> IntoIterator for &'a MultiRange {
-    type Item = char;
-    type IntoIter = MultiRangeIterator<'a>;
-    fn into_iter(self) -> Self::IntoIter {
-        self.iter()
+    pub fn nth_char(&self, index: usize) -> Option<char> {
+        self.iter().nth(index)
     }
 }
 

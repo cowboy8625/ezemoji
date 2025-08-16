@@ -299,7 +299,7 @@ impl CharGroup {
 
     pub const JAP: Self = CharGroup::new(
         GroupKind::Jap,
-        // NOTE: this messes with my editor so I fold it up
+        // NOTE: The last character 65_437 is not included as its a 3 wide character.
         // ｦｧｨｩｪｫｬｭｮｯｰｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜ
         MultiRange::new(&[JAP_RANGE]),
         CharWidth::Single,

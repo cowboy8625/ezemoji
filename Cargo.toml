@@ -1,6 +1,6 @@
 [package]
 name = "ezemoji"
-version = "1.0.0"
+version = "2.0.0"
 authors = ["cowboy8625 <cowboy8625@protonmail.com>"]
 edition = "2024"
 description = "Catigoryized Emoji's"
@@ -11,6 +11,9 @@ license-file = "LICENSE"
 
 [dev-dependencies]
 pretty_assertions = "1.4.1"
+
+[features]
+alloc = []
 
 [badges]
 travis-ci = { repository = "cowboy8625/ezemoji" }
